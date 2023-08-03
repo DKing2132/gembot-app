@@ -97,7 +97,7 @@ function start() {
         const data = await response.json();
         console.log('data from API: ', data);
         const timer = setInterval(async () => {
-          console.log('dca polling job for status');
+          console.log('dca polling job for status for order');
           try {
             const jobResponse = await fetch(
               `${API_URL}/api/order/job?id=${data.message}`,
@@ -120,16 +120,16 @@ function start() {
               `job status: ${jobStatus.status} for job: ${data.message}`
             );
             if (jobStatus.status === 'SUCCESS') {
-              console.log('dca job completed successfully');
+              console.log('dca job completed successfully for order: ' + job.data.orderId);
               let nextUpdateAt;
               if (job.data.unitOfTime === 'HOURS') {
-                nextUpdateAt = addHoursToDate(new Date(), job.data.frequency);
+                nextUpdateAt = addHoursToDate(new Date(), 1);
               } else if (job.data.unitOfTime === 'DAYS') {
-                nextUpdateAt = addDaysToDate(new Date(), job.data.frequency);
+                nextUpdateAt = addDaysToDate(new Date(), 1);
               } else if (job.data.unitOfTime === 'WEEKS') {
-                nextUpdateAt = addWeeksToDate(new Date(), job.data.frequency);
+                nextUpdateAt = addWeeksToDate(new Date(), 1);
               } else if (job.data.unitOfTime === 'MONTHS') {
-                nextUpdateAt = addMonthsToDate(new Date(), job.data.frequency);
+                nextUpdateAt = addMonthsToDate(new Date(), 1);
               } else {
                 throw new Error('Invalid unit of time');
               }
@@ -154,6 +154,8 @@ function start() {
                     frequency: job.data.frequency - 1,
                   },
                 });
+
+                console.log(`New DCA stats, order lastUpdated at ${new Date()} and nextUpdateAt: ${nextUpdateAt}`);
               }
 
               clearInterval(timer);
