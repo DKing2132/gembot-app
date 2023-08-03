@@ -55,7 +55,7 @@ export const BuyQueue = new Queue('buy', REDIS_URL, {
   },
 });
 
-export const WorkQueue = new Queue('dca', REDIS_URL, {
+export const WorkQueue = new Queue('dca1', REDIS_URL, {
   redis: {
     tls: {
       rejectUnauthorized: false,

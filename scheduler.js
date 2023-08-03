@@ -4,7 +4,7 @@ const { PrismaClient } = require('@prisma/client');
 const process = require('process');
 
 let REDIS_URL = process.env.REDIS_URL;
-let workQueue = new Queue('dca', REDIS_URL, {
+let workQueue = new Queue('dca1', REDIS_URL, {
   redis: {
     tls: {
       rejectUnauthorized: false,
@@ -12,6 +12,8 @@ let workQueue = new Queue('dca', REDIS_URL, {
     },
   },
 });
+
+console.log('scheduler connected to dca1');
 
 const prisma = new PrismaClient();
 

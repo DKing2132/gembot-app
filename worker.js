@@ -44,7 +44,7 @@ function addMonthsToDate(date, months) {
 
 function start() {
   console.log('start');
-  const workQueue = new Queue('dca', REDIS_URL, {
+  const workQueue = new Queue('dca1', REDIS_URL, {
     redis: {
       tls: {
         rejectUnauthorized: false,
@@ -52,6 +52,8 @@ function start() {
       },
     },
   });
+
+  console.log('worker connected to dca1');
 
   workQueue.process(maxJobsPerWorker, async (job) => {
     console.log('Processing job: ', job.data.orderId);
@@ -168,7 +170,17 @@ function start() {
           } catch (err) {
             console.log(err);
             clearInterval(timer);
-            throw new Error('Failed to get job status');
+            console.log('Failed to get job status');
+
+            console.log('will try order again later!');
+
+            // try the order again next time
+            await prisma.order.update({
+              where: { orderId: job.data.orderId },
+              data: {
+                nextUpdateAt: addMinutesToDate(new Date(), 1),
+              },
+            });
           }
         }, 2000);
       } else {
