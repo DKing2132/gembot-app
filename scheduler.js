@@ -55,6 +55,8 @@ async function processOrder(order) {
         frequency: order.frequency,
         unitOfTime: order.unitOfTime,
         retryCount: order.retryCount,
+        lastUpdatedAt: order.lastUpdatedAt,
+        nextUpdateAt: order.nextUpdateAt,
       },
       { attempts: 1 }
     );

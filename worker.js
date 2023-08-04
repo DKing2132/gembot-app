@@ -67,6 +67,35 @@ async function handleJobError(currentRetryCount, orderId) {
   }
 }
 
+async function updateOrderStatusHistory(
+  orderId,
+  status,
+  depositedTokenAmount,
+  lastUpdatedAt,
+  nextUpdateAt,
+  frequency,
+  message
+) {
+  try {
+    await prisma.orderStatusHistory.update({
+      where: {
+        orderId: orderId,
+      },
+      data: {
+        status: status,
+        depositedTokenAmount: depositedTokenAmount,
+        lastUpdatedAt: lastUpdatedAt,
+        nextUpdateAt: nextUpdateAt,
+        frequency: frequency,
+        message: message,
+      },
+    });
+  } catch (err) {
+    console.log('Failed to update order status history due to: ');
+    console.log(err);
+  }
+}
+
 function start() {
   console.log('start');
   const workQueue = new Queue('dca1', REDIS_URL, {
@@ -99,30 +128,30 @@ function start() {
       },
     });
 
-    const response = await fetch(`${API_URL}/api/order/buy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'genesis-bot-user-id': job.data.userId,
-      },
-      body: JSON.stringify({
-        walletOwnerAddress: job.data.walletOwnerAddress,
-        depositedTokenAddress: job.data.depositedTokenAddress,
-        desiredTokenAddress: job.data.desiredTokenAddress,
-        depositedTokenAmount: job.data.depositedTokenAmount,
-        isNativeETH: job.data.isNativeETH,
-        orderId: job.data.orderId,
-      }),
-    });
-
-    console.log('got response from API for order: ', job.data.orderId);
-
     try {
+      const response = await fetch(`${API_URL}/api/order/buy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'genesis-bot-user-id': job.data.userId,
+        },
+        body: JSON.stringify({
+          walletOwnerAddress: job.data.walletOwnerAddress,
+          depositedTokenAddress: job.data.depositedTokenAddress,
+          desiredTokenAddress: job.data.desiredTokenAddress,
+          depositedTokenAmount: job.data.depositedTokenAmount,
+          isNativeETH: job.data.isNativeETH,
+          orderId: job.data.orderId,
+        }),
+      });
+
+      console.log('got response from API for order: ', job.data.orderId);
       if (response.ok) {
         const data = await response.json();
         console.log('data from API: ', data);
         const timer = setInterval(async () => {
           console.log('dca polling job for status for order');
+          let updatedStatusHistory = false;
           try {
             const jobResponse = await fetch(
               `${API_URL}/api/order/job?id=${data.message}`,
@@ -136,6 +165,16 @@ function start() {
 
             if (!jobResponse.ok) {
               const error = await jobResponse.json();
+              await updateOrderStatusHistory(
+                job.data.orderId,
+                'Failed',
+                job.data.depositedTokenAmount,
+                job.data.lastUpdatedAt,
+                job.data.nextUpdateAt,
+                job.data.frequency,
+                error.message
+              );
+              updatedStatusHistory = true;
               clearInterval(timer);
               throw new Error(error.message);
             }
@@ -148,6 +187,7 @@ function start() {
               console.log(
                 'dca job completed successfully for order: ' + job.data.orderId
               );
+
               let nextUpdateAt;
               if (job.data.unitOfTime === 'HOURS') {
                 nextUpdateAt = addHoursToDate(new Date(), 1);
@@ -168,9 +208,21 @@ function start() {
                     orderId: job.data.orderId,
                   },
                 });
+
+                await updateOrderStatusHistory(
+                  job.data.orderId,
+                  'Completed',
+                  0,
+                  Date.now(),
+                  Date.now(),
+                  job.data.frequency,
+                  'Your order has been completed successfully!'
+                );
+
+                updatedStatusHistory = true;
               } else {
                 // update order balances
-                await prisma.order.update({
+                const updatedOrder = await prisma.order.update({
                   where: { orderId: job.data.orderId },
                   data: {
                     depositedTokenAmount: {
@@ -183,6 +235,18 @@ function start() {
                   },
                 });
 
+                await updateOrderStatusHistory(
+                  job.data.orderId,
+                  'Success',
+                  updatedOrder.depositedTokenAmount,
+                  updatedOrder.lastUpdatedAt,
+                  updatedOrder.nextUpdateAt,
+                  updatedOrder.frequency,
+                  'Latest transaction was successful!'
+                );
+
+                updatedStatusHistory = true;
+
                 console.log(
                   `New DCA stats, order lastUpdated at ${new Date()} and nextUpdateAt: ${nextUpdateAt}`
                 );
@@ -194,6 +258,16 @@ function start() {
               );
             } else if (jobStatus.status === 'FAILED') {
               console.log('dca job failed');
+              await updateOrderStatusHistory(
+                job.data.orderId,
+                'Failed',
+                updatedOrder.depositedTokenAmount,
+                updatedOrder.lastUpdatedAt,
+                updatedOrder.nextUpdateAt,
+                updatedOrder.frequency,
+                jobStatus.message
+              );
+              updatedStatusHistory = true;
               clearInterval(timer);
               throw new Error(jobStatus.message);
             } else {
@@ -201,7 +275,17 @@ function start() {
             }
           } catch (err) {
             console.log(err);
-            clearInterval(timer);
+            if (!updatedStatusHistory) {
+              await updateOrderStatusHistory(
+                job.data.orderId,
+                'Failed',
+                job.data.depositedTokenAmount,
+                job.data.lastUpdatedAt,
+                job.data.nextUpdateAt,
+                job.data.frequency,
+                'Failed to get job status'
+              );
+            }
             console.log('Failed to get job status');
 
             try {
@@ -210,14 +294,34 @@ function start() {
               console.log('Failed to handle job error');
               console.log(err);
             }
+            clearInterval(timer);
           }
         }, 2000);
       } else {
         const error = await response.json();
+        await updateOrderStatusHistory(
+          job.data.orderId,
+          'Failed',
+          job.data.depositedTokenAmount,
+          job.data.lastUpdatedAt,
+          job.data.nextUpdateAt,
+          job.data.frequency,
+          error.message
+        );
         throw new Error(error.message);
       }
     } catch (err) {
       console.log('Worker - error from API: ', err);
+
+      await updateOrderStatusHistory(
+        job.data.orderId,
+        'Failed',
+        job.data.depositedTokenAmount,
+        job.data.lastUpdatedAt,
+        job.data.nextUpdateAt,
+        job.data.frequency,
+        'Failed to execute buy order.'
+      );
 
       try {
         await handleJobError(job.data.retryCount, job.data.orderId);

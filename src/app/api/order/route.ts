@@ -95,6 +95,22 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // create order status history
+  await prisma.orderStatusHistory.create({
+    data: {
+      userId: userId,
+      orderId: order.orderId,
+      walletOwnerAddress: order.walletOwnerAddress,
+      depositedTokenAddress: order.depositedTokenAddress,
+      desiredTokenAddress: order.desiredTokenAddress,
+      depositedTokenAmount: order.depositedTokenAmount,
+      unitOfTime: order.unitOfTime,
+      frequency: order.frequency,
+      status: 'Created',
+      message: 'Order was created successfully',
+    },
+  });
+
   const orderResponse: OrderResponse = {
     walletOwnerAddress: order.walletOwnerAddress,
     depositedTokenAddress: order.depositedTokenAddress,

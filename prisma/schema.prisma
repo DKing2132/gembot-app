@@ -38,6 +38,7 @@ model User {
   wallet3PrivateKey   String
   orders Order[]
   links Link[]
+  orderStatusHistory OrderStatusHistory[]
 }
 
 model Link {
@@ -56,4 +57,21 @@ model Token {
   address String @unique
   name String
   symbol String
+}
+
+model OrderStatusHistory {
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  orderId String  @unique
+  walletOwnerAddress String
+  depositedTokenAddress String
+  desiredTokenAddress String
+  depositedTokenAmount Decimal
+  createdAt DateTime @default(now())
+  lastUpdatedAt DateTime @default(now())
+  nextUpdateAt DateTime @default(now())
+  unitOfTime String
+  frequency Int
+  status String
+  message String
 }
