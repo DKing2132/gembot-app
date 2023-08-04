@@ -67,6 +67,7 @@ model OrderStatusHistory {
   depositedTokenAddress String
   desiredTokenAddress String
   depositedTokenAmount Decimal
+  isNativeETH Boolean
   createdAt DateTime @default(now())
   lastUpdatedAt DateTime @default(now())
   nextUpdateAt DateTime @default(now())

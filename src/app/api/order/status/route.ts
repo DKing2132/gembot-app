@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       frequency: orderHistory.frequency,
       walletOwnerAddress: orderHistory.walletOwnerAddress,
       message: orderHistory.message,
+      isNativeETH: orderHistory.isNativeETH,
     };
 
     if (orderHistory.walletOwnerAddress === validation.user!.wallet1) {

@@ -16,4 +16,5 @@ export type OrderStatusTrack = {
   frequency: number;
   walletOwnerAddress: string;
   message: string;
+  isNativeETH: boolean;
 };

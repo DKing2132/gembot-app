@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
       depositedTokenAddress: order.depositedTokenAddress,
       desiredTokenAddress: order.desiredTokenAddress,
       depositedTokenAmount: order.depositedTokenAmount,
+      isNativeETH: order.isNativeETH,
       unitOfTime: order.unitOfTime,
       frequency: order.frequency,
       status: 'Created',
@@ -200,8 +201,26 @@ export async function PATCH(request: NextRequest) {
         depositedTokenAmount: updateOrderBody.value as number,
       },
     });
+
+    await prisma.orderStatusHistory.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        depositedTokenAmount: updateOrderBody.value as number,
+      },
+    });
   } else if (validation.fieldToUpdate === 'desiredToken') {
     await prisma.order.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        desiredTokenAddress: updateOrderBody.value as string,
+      },
+    });
+
+    await prisma.orderStatusHistory.update({
       where: {
         orderId: updateOrderBody.orderID,
       },
@@ -218,8 +237,26 @@ export async function PATCH(request: NextRequest) {
         frequency: updateOrderBody.value as number,
       },
     });
+
+    await prisma.orderStatusHistory.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        frequency: updateOrderBody.value as number,
+      },
+    });
   } else if (validation.fieldToUpdate === 'unitOfTime') {
     await prisma.order.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        unitOfTime: updateOrderBody.value as string,
+      },
+    });
+
+    await prisma.orderStatusHistory.update({
       where: {
         orderId: updateOrderBody.orderID,
       },
