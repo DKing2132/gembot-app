@@ -42,6 +42,31 @@ function addMonthsToDate(date, months) {
   return d;
 }
 
+async function handleJobError(currentRetryCount, orderId) {
+  if (currentRetryCount + 1 >= 5) {
+    // delete order
+    await prisma.order.delete({
+      where: {
+        orderId: orderId,
+      },
+    });
+
+    console.log(`Deleted order ${orderId} after 5 retries`);
+  } else {
+    console.log('will try order again later!');
+    // try the order again next time
+    await prisma.order.update({
+      where: { orderId: orderId },
+      data: {
+        // twelve minutes will make sure it gets tried again in two runs
+        // scheduler runs every 10 minutes
+        nextUpdateAt: addMinutesToDate(new Date(), 12),
+        retryCount: currentRetryCount + 1,
+      },
+    });
+  }
+}
+
 function start() {
   console.log('start');
   const workQueue = new Queue('dca1', REDIS_URL, {
@@ -120,7 +145,9 @@ function start() {
               `job status: ${jobStatus.status} for job: ${data.message}`
             );
             if (jobStatus.status === 'SUCCESS') {
-              console.log('dca job completed successfully for order: ' + job.data.orderId);
+              console.log(
+                'dca job completed successfully for order: ' + job.data.orderId
+              );
               let nextUpdateAt;
               if (job.data.unitOfTime === 'HOURS') {
                 nextUpdateAt = addHoursToDate(new Date(), 1);
@@ -152,10 +179,13 @@ function start() {
                     lastUpdatedAt: new Date(),
                     nextUpdateAt: nextUpdateAt,
                     frequency: job.data.frequency - 1,
+                    retryCount: 0,
                   },
                 });
 
-                console.log(`New DCA stats, order lastUpdated at ${new Date()} and nextUpdateAt: ${nextUpdateAt}`);
+                console.log(
+                  `New DCA stats, order lastUpdated at ${new Date()} and nextUpdateAt: ${nextUpdateAt}`
+                );
               }
 
               clearInterval(timer);
@@ -174,15 +204,12 @@ function start() {
             clearInterval(timer);
             console.log('Failed to get job status');
 
-            console.log('will try order again later!');
-
-            // try the order again next time
-            await prisma.order.update({
-              where: { orderId: job.data.orderId },
-              data: {
-                nextUpdateAt: addMinutesToDate(new Date(), 1),
-              },
-            });
+            try {
+              await handleJobError(job.data.retryCount, job.data.orderId);
+            } catch (err) {
+              console.log('Failed to handle job error');
+              console.log(err);
+            }
           }
         }, 2000);
       } else {
@@ -192,13 +219,12 @@ function start() {
     } catch (err) {
       console.log('Worker - error from API: ', err);
 
-      // try the order again next time
-      await prisma.order.update({
-        where: { orderId: job.data.orderId },
-        data: {
-          nextUpdateAt: addMinutesToDate(new Date(), 1),
-        },
-      });
+      try {
+        await handleJobError(job.data.retryCount, job.data.orderId);
+      } catch (err) {
+        console.log('Failed to handle job error');
+        console.log(err);
+      }
 
       return Promise.reject(
         new Error(`Error processing order: ${job.data.orderId}`)

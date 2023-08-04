@@ -54,6 +54,7 @@ async function processOrder(order) {
         userId: order.userId,
         frequency: order.frequency,
         unitOfTime: order.unitOfTime,
+        retryCount: order.retryCount,
       },
       { attempts: 1 }
     );
