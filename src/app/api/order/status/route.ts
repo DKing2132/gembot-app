@@ -37,9 +37,9 @@ export async function GET(request: NextRequest) {
     const ordeStatusHistoryResponse: OrderStatusTrack = {
       orderId: orderHistory.orderId,
       status: orderHistory.status,
-      depositTokenAddress: orderHistory.depositedTokenAddress,
+      depositedTokenAddress: orderHistory.depositedTokenAddress,
       desiredTokenAddress: orderHistory.desiredTokenAddress,
-      depositTokenAmount: Number(orderHistory.depositedTokenAmount),
+      depositedTokenAmount: Number(orderHistory.depositedTokenAmount),
       lastUpdatedAt: orderHistory.lastUpdatedAt,
       nextUpdateAt: orderHistory.nextUpdateAt,
       unitOfTime: orderHistory.unitOfTime,

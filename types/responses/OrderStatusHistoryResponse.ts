@@ -7,9 +7,9 @@ export type OrderStatusHistoryResponse = {
 export type OrderStatusTrack = {
   orderId: string;
   status: string;
-  depositTokenAddress: string;
+  depositedTokenAddress: string;
   desiredTokenAddress: string;
-  depositTokenAmount: number;
+  depositedTokenAmount: number;
   lastUpdatedAt: Date;
   nextUpdateAt: Date;
   unitOfTime: string;
