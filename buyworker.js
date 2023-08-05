@@ -471,7 +471,7 @@ function start() {
           '',
           job.data.depositedTokenAmount
         );
-        await analyticsTracker.recordBuyTxSucceded();
+        await analyticsTracker.recordBuyTxSucceeded();
       } else if (job.data.type === 'sell') {
         await analyticsTracker.recordTokenTotalAmountIncrease(
           job.data.depositedTokenAddress,
@@ -479,7 +479,7 @@ function start() {
           '',
           job.data.depositedTokenAmount
         );
-        await analyticsTracker.recordSellTxSucceded();
+        await analyticsTracker.recordSellTxSucceeded();
       }
 
       return Promise.resolve({

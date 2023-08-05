@@ -23,7 +23,7 @@ class AnalyticsTracker {
     }
   }
 
-  async recordBuyTxSucceded() {
+  async recordBuyTxSucceeded() {
     try {
       const analytic = await this.confirmAnalyticsForDay();
 
@@ -33,7 +33,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            buyTxSucceded: analytic.buyTxSucceded + 1,
+            buyTxSucceeded: analytic.buyTxSucceeded + 1,
           },
         });
       }
@@ -63,7 +63,7 @@ class AnalyticsTracker {
     }
   }
 
-  async recordSellTxSucceded() {
+  async recordSellTxSucceeded() {
     try {
       const analytic = await this.confirmAnalyticsForDay();
 
@@ -73,7 +73,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            sellTxSucceded: analytic.sellTxSucceded + 1,
+            sellTxSucceeded: analytic.sellTxSucceeded + 1,
           },
         });
       }
