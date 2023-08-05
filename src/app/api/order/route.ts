@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
   });
 
-  await AnalyticsTracker.recordOrderStatusCheck();
+  await AnalyticsTracker.recordActiveOrdersCheck();
 
   return NextResponse.json(response, {
     status: 200,
