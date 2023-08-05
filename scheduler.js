@@ -12,26 +12,31 @@ let workQueue = new Queue('dca1', REDIS_URL, {
     },
   },
 });
+const API_URL = process.env.API_URL;
 
 console.log('scheduler connected to dca1');
 
 const prisma = new PrismaClient();
 
 async function processOrder(order) {
-  const existingJobs = await workQueue.getJobs();
+  try {
+    const response = await fetch(
+      `${API_URL}/api/order/job?orderId=${order.orderId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-  const currentJob = existingJobs.filter(
-    (job) => job.data.orderId === order.orderId
-  );
-  if (currentJob.length > 0) {
-    const jobInPendingStatus =
-      (await currentJob[0].isActive()) ||
-      (await currentJob[0].isDelayed()) ||
-      (await currentJob[0].isPaused()) ||
-      (await currentJob[0].isStuck()) ||
-      (await currentJob[0].isWaiting());
+    if (!response.ok) {
+      console.log('Error scheduling order.');
+      return;
+    }
 
-    if (!jobInPendingStatus) {
+    const data = await response.json();
+    if (data.status === 'NOJOB') {
       await workQueue.add(
         {
           orderId: order.orderId,
@@ -50,30 +55,12 @@ async function processOrder(order) {
         { attempts: 1 }
       );
 
-      console.log('Scheduler - Adding order to queue: ', order.orderId);
+      console.log('Scheduler - Order queued: ', order.orderId);
     } else {
       console.log('Scheduler - Order already in queue: ', order.orderId);
     }
-  } else {
-    await workQueue.add(
-      {
-        orderId: order.orderId,
-        walletOwnerAddress: order.walletOwnerAddress,
-        depositedTokenAddress: order.depositedTokenAddress,
-        depositedTokenAmount: order.depositedTokenAmount / order.frequency,
-        desiredTokenAddress: order.desiredTokenAddress,
-        isNativeETH: order.isNativeETH,
-        userId: order.userId,
-        frequency: order.frequency,
-        unitOfTime: order.unitOfTime,
-        retryCount: order.retryCount,
-        lastUpdatedAt: order.lastUpdatedAt,
-        nextUpdateAt: order.nextUpdateAt,
-      },
-      { attempts: 1 }
-    );
-
-    console.log('Scheduler - Adding order to queue: ', order.orderId);
+  } catch (err) {
+    console.log('Error scheduling order.', err);
   }
 }
 

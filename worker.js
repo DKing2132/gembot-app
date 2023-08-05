@@ -255,6 +255,20 @@ function start() {
               await workQueue.removeRepeatableByKey(job.id);
               clearInterval(timer);
               throw new Error(jobStatus.message);
+            } else {
+              console.log('dca job is still running');
+              if (!updatedStatusHistory) {
+                await updateOrderStatusHistory(
+                  job.data.orderId,
+                  'Running',
+                  job.data.depositedTokenAmount,
+                  job.data.lastUpdatedAt,
+                  job.data.nextUpdateAt,
+                  job.data.frequency,
+                  'Your order is being processed'
+                );
+              }
+              updatedStatusHistory = true;
             }
           } catch (err) {
             console.log(err);

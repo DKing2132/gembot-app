@@ -5,6 +5,29 @@ import { ExecuteTransactionResponse } from '../../../../../types/responses/Execu
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const jobId = searchParams.get('id');
+  const orderId = searchParams.get('orderId');
+
+  // retrieve status from job that contains orderId
+  if (orderId) {
+    const jobs = await BuyQueue.getJobs([
+      'active',
+      'waiting',
+      'delayed',
+      'paused',
+    ]);
+    const job = jobs.find((job) => job.data.orderId === orderId);
+    if (!job) {
+      return NextResponse.json(
+        { status: 'NOJOB', message: 'Job not found.' },
+        { status: 200 }
+      );
+    } else {
+      return NextResponse.json(
+        { status: 'PENDING', message: 'Job pending.' },
+        { status: 200 }
+      );
+    }
+  }
 
   if (!jobId) {
     return NextResponse.json(
