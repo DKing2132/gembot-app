@@ -74,6 +74,10 @@ class ERC20Helper {
     try {
       const ERC20Token = new ethers.Contract(tokenAddress, ERC20Abi, signer);
 
+      console.log('Gas Price: in gwei:');
+      console.log(
+        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
+      );
       const currentGasPrice = ethers.utils.hexlify(
         await provider.getGasPrice()
       );
@@ -101,6 +105,10 @@ class ERC20Helper {
     try {
       const ERC20Token = new ethers.Contract(tokenAddress, ERC20Abi, wallet);
 
+      console.log('Gas Price: in gwei:');
+      console.log(
+        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
+      );
       const currentGasPrice = ethers.utils.hexlify(
         await provider.getGasPrice()
       );
@@ -146,6 +154,10 @@ class ERC20Helper {
   static async transferETH(wallet, recipientAddress, amountToSend) {
     try {
       const nonce = await wallet.getTransactionCount();
+      console.log('Gas Price: in gwei:');
+      console.log(
+        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
+      );
       const currentGasPrice = ethers.utils.hexlify(
         await provider.getGasPrice()
       );
@@ -330,6 +342,10 @@ function start() {
       const value = trade.inputAmount.raw; // needs to be converted to e.g. hex
       const valueHex = ethers.BigNumber.from(value.toString()).toHexString();
 
+      console.log('Gas Price: in gwei:');
+      console.log(
+        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
+      );
       const currentGasPrice = ethers.utils.hexlify(
         await provider.getGasPrice()
       );
