@@ -170,7 +170,7 @@ export class AnalyticsTracker {
     }
   }
 
-  private static async confirmTokenStatsForDay(
+  public static async confirmTokenStatsForDay(
     tokenAddress: string,
     name: string,
     symbol: string
@@ -227,7 +227,7 @@ export class AnalyticsTracker {
 
   // creates day analytics for the current day
   // if it already exists it will just return true
-  private static async confirmAnalyticsForDay(): Promise<Analytics | null> {
+  public static async confirmAnalyticsForDay(): Promise<Analytics | null> {
     try {
       // get the latest analytic recorded
       const analytic = await prisma.analytics.findFirst({
