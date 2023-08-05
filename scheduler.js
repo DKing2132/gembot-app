@@ -18,31 +18,43 @@ console.log('scheduler connected to dca1');
 const prisma = new PrismaClient();
 
 async function processOrder(order) {
-  const orderStatus = await prisma.orderStatus.findUnique({
-    where: {
-      orderId: order.orderId,
-    },
-  });
+  const existingJobs = await workQueue.getJobs();
 
-  console.log('Schedulder - Processing order: ', order.orderId);
-  console.log('Schedule - Order status: ', orderStatus);
+  const currentJob = existingJobs.filter(
+    (job) => job.data.orderId === order.orderId
+  );
+  if (currentJob.length > 0) {
+    const jobInPendingStatus =
+      (await currentJob[0].isActive()) ||
+      (await currentJob[0].isDelayed()) ||
+      (await currentJob[0].isPaused()) ||
+      (await currentJob[0].isStuck()) ||
+      (await currentJob[0].isWaiting());
 
-  if (!orderStatus || orderStatus.inQueue === false) {
-    await prisma.orderStatus.upsert({
-      where: {
-        orderId: order.orderId,
-      },
-      update: {
-        inQueue: true,
-      },
-      create: {
-        orderId: order.orderId,
-        inQueue: true,
-      },
-    });
+    if (!jobInPendingStatus) {
+      await workQueue.add(
+        {
+          orderId: order.orderId,
+          walletOwnerAddress: order.walletOwnerAddress,
+          depositedTokenAddress: order.depositedTokenAddress,
+          depositedTokenAmount: order.depositedTokenAmount / order.frequency,
+          desiredTokenAddress: order.desiredTokenAddress,
+          isNativeETH: order.isNativeETH,
+          userId: order.userId,
+          frequency: order.frequency,
+          unitOfTime: order.unitOfTime,
+          retryCount: order.retryCount,
+          lastUpdatedAt: order.lastUpdatedAt,
+          nextUpdateAt: order.nextUpdateAt,
+        },
+        { attempts: 1 }
+      );
 
-    console.log('Scheduler - Adding order to queue: ', order.orderId);
-
+      console.log('Scheduler - Adding order to queue: ', order.orderId);
+    } else {
+      console.log('Scheduler - Order already in queue: ', order.orderId);
+    }
+  } else {
     await workQueue.add(
       {
         orderId: order.orderId,
@@ -60,8 +72,8 @@ async function processOrder(order) {
       },
       { attempts: 1 }
     );
-  } else {
-    console.log('Scheduler - Order already in queue: ', order.orderId);
+
+    console.log('Scheduler - Adding order to queue: ', order.orderId);
   }
 }
 

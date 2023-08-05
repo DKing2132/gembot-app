@@ -118,7 +118,7 @@ export async function DELETE(request: NextRequest) {
 
   if (nonExistingOrderIds.length === 0) {
     return NextResponse.json(
-      { message: 'No non existing orders found.' },
+      { message: 'No non-pending orders found.' },
       { status: 200 }
     );
   }

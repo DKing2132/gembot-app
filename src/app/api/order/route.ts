@@ -154,16 +154,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  try {
-    await prisma.orderStatus.delete({
-      where: {
-        orderId: orderToDelete.orderID,
-      },
-    });
-  } catch (e) {
-    console.log(`no order statuses found for order ${orderToDelete.orderID}`);
-  }
-
   await prisma.order.delete({
     where: {
       orderId: orderToDelete.orderID,

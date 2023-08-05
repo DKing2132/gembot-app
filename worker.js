@@ -110,23 +110,7 @@ function start() {
   console.log('worker connected to dca1');
 
   workQueue.process(maxJobsPerWorker, async (job) => {
-    console.log('Processing job: ', job.data.orderId);
-
-    const orderStatus = await prisma.orderStatus.findUnique({
-      where: {
-        orderId: job.data.orderId,
-      },
-    });
-
-    if (!orderStatus || orderStatus.inQueue === false) {
-      return Promise.reject(new Error('Order not in queue'));
-    }
     console.log('Order has been dequeued: ', job.data.orderId);
-    await prisma.orderStatus.delete({
-      where: {
-        orderId: job.data.orderId,
-      },
-    });
 
     try {
       const response = await fetch(`${API_URL}/api/order/buy`, {
@@ -176,6 +160,7 @@ function start() {
               );
               updatedStatusHistory = true;
               clearInterval(timer);
+              await workQueue.removeRepeatableByKey(job.id);
               throw new Error(error.message);
             }
 
@@ -250,6 +235,7 @@ function start() {
                 );
               }
 
+              await workQueue.removeRepeatableByKey(job.id);
               clearInterval(timer);
               return Promise.resolve(
                 `Processed order: ${job.data.orderId} successfully!`
@@ -266,6 +252,7 @@ function start() {
                 jobStatus.message
               );
               updatedStatusHistory = true;
+              await workQueue.removeRepeatableByKey(job.id);
               clearInterval(timer);
               throw new Error(jobStatus.message);
             }
@@ -290,6 +277,7 @@ function start() {
               console.log('Failed to handle job error');
               console.log(err);
             }
+            await workQueue.removeRepeatableByKey(job.id);
             clearInterval(timer);
           }
         }, 2000);
@@ -304,6 +292,7 @@ function start() {
           job.data.frequency,
           error.message
         );
+        await workQueue.removeRepeatableByKey(job.id);
         throw new Error(error.message);
       }
     } catch (err) {
@@ -326,6 +315,7 @@ function start() {
         console.log(err);
       }
 
+      await workQueue.removeRepeatableByKey(job.id);
       return Promise.reject(
         new Error(`Error processing order: ${job.data.orderId}`)
       );
