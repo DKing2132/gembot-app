@@ -13,7 +13,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            buyTxFailed: analytic.buyTxFailed + 1,
+            buyTxFailed: Number(analytic.buyTxFailed) + 1,
           },
         });
       }
@@ -33,7 +33,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            buyTxSucceeded: analytic.buyTxSucceeded + 1,
+            buyTxSucceeded: Number(analytic.buyTxSucceeded) + 1,
           },
         });
       }
@@ -53,7 +53,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            sellTxFailed: analytic.sellTxFailed + 1,
+            sellTxFailed: Number(analytic.sellTxFailed) + 1,
           },
         });
       }
@@ -73,7 +73,7 @@ class AnalyticsTracker {
             id: analytic.id,
           },
           data: {
-            sellTxSucceeded: analytic.sellTxSucceeded + 1,
+            sellTxSucceeded: Number(analytic.sellTxSucceeded) + 1,
           },
         });
       }
@@ -97,7 +97,7 @@ class AnalyticsTracker {
             address: tokenStats.address,
           },
           data: {
-            totalAmount: tokenStats.totalAmount + amount,
+            totalAmount: Number(tokenStats.totalAmount) + Number(amount),
           },
         });
       }
