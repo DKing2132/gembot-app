@@ -60,7 +60,7 @@ model Token {
 }
 
 model OrderStatusHistory {
-  userId String @unique
+  userId String
   user User @relation(fields: [userId], references: [id])
   orderId String  @unique
   walletOwnerAddress String
