@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "web": "cd webapp && npm run dev",
+    "worker": "cd webapp && node worker.js",
+    "buyworker": "cd webapp && node buyworker.js"
   },
   "author": "",
   "license": "ISC"
