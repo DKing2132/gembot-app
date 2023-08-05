@@ -180,9 +180,6 @@ function start() {
             }
 
             const jobStatus = await jobResponse.json();
-            console.log(
-              `job status: ${jobStatus.status} for job: ${data.message}`
-            );
             if (jobStatus.status === 'SUCCESS') {
               console.log(
                 'dca job completed successfully for order: ' + job.data.orderId
@@ -209,13 +206,14 @@ function start() {
                   },
                 });
 
+                const currDateStr = new Date().toISOString();
                 await updateOrderStatusHistory(
                   job.data.orderId,
                   'Completed',
                   0,
-                  Date.now(),
-                  Date.now(),
-                  job.data.frequency,
+                  currDateStr,
+                  currDateStr,
+                  0,
                   'Your order has been completed successfully!'
                 );
 
@@ -270,8 +268,6 @@ function start() {
               updatedStatusHistory = true;
               clearInterval(timer);
               throw new Error(jobStatus.message);
-            } else {
-              console.log('dca job still processing');
             }
           } catch (err) {
             console.log(err);

@@ -480,7 +480,7 @@ function start() {
         });
       } else if (
         err.code === 'CALL_EXCEPTION' &&
-        err.method.includes('getReserves')
+        err.method?.includes('getReserves')
       ) {
         return Promise.reject({
           success: false,
