@@ -163,6 +163,8 @@ export class AnalyticsTracker {
             searchCount: tokenStats.searchCount + 1,
           },
         });
+      } else {
+        console.log('Failed to record token search');
       }
     } catch (error) {
       console.log('Failed to track token search');
