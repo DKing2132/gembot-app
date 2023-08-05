@@ -53,6 +53,7 @@ function decrypt(text) {
 const maxJobsPerWorker = 50;
 
 const prisma = new PrismaClient();
+const analyticsTracker = new AnalyticsTracker(prisma);
 
 class SendTxHelper {
   static getGasLimitWithBuffer(gasLimit) {
@@ -464,21 +465,21 @@ function start() {
       }
 
       if (job.data.type === 'buy') {
-        await AnalyticsTracker.recordTokenTotalAmountIncrease(
+        await analyticsTracker.recordTokenTotalAmountIncrease(
           job.data.depositedTokenAddress,
           '',
           '',
           job.data.depositedTokenAmount
         );
-        await AnalyticsTracker.recordBuyTxSucceded();
+        await analyticsTracker.recordBuyTxSucceded();
       } else if (job.data.type === 'sell') {
-        await AnalyticsTracker.recordTokenTotalAmountIncrease(
+        await analyticsTracker.recordTokenTotalAmountIncrease(
           job.data.depositedTokenAddress,
           '',
           '',
           job.data.depositedTokenAmount
         );
-        await AnalyticsTracker.recordSellTxSucceded();
+        await analyticsTracker.recordSellTxSucceded();
       }
 
       return Promise.resolve({
@@ -488,9 +489,9 @@ function start() {
       });
     } catch (err) {
       if (job.data.type === 'buy') {
-        await AnalyticsTracker.recordBuyTxFailed();
+        await analyticsTracker.recordBuyTxFailed();
       } else if (job.data.type === 'sell') {
-        await AnalyticsTracker.recordSellTxFailed();
+        await analyticsTracker.recordSellTxFailed();
       }
 
       if (err.code === 'INSUFFICIENT_FUNDS') {
