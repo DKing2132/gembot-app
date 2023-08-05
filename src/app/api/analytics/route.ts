@@ -4,6 +4,7 @@ import { prisma } from '../../../../utilities/constants';
 import { AnalyticsResponse } from '../../../../types/responses/AnalyticsResponse';
 
 export async function GET(request: NextRequest) {
+  console.log(request.url);
   const analytic = await AnalyticsTracker.confirmAnalyticsForDay();
 
   if (!analytic) {

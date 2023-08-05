@@ -25,7 +25,6 @@ model Order {
   retryCount Int @default(0)
   user User @relation(fields: [userId], references: [id])
   userId String
-  status OrderStatus[]
 }
 
 model User {
@@ -45,12 +44,6 @@ model Link {
   userId String @unique
   user User @relation(fields: [userId], references: [id])
   walletAddress String
-}
-
-model OrderStatus {
-  orderId String @unique
-  order Order @relation(fields: [orderId], references: [orderId])
-  inQueue Boolean
 }
 
 model Token {
