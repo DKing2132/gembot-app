@@ -1,3 +1,3 @@
-web: npm run web
-worker: npm run worker
-buyworker: npm run buyworker
+web: npm start
+worker: node worker.js
+buyworker: node buyworker.js
