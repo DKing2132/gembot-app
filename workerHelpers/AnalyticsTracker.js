@@ -8,7 +8,7 @@ class AnalyticsTracker {
       const analytic = await this.confirmAnalyticsForDay();
 
       if (analytic) {
-        await prisma.analytics.update({
+        await this.prisma.analytics.update({
           where: {
             id: analytic.id,
           },
@@ -28,7 +28,7 @@ class AnalyticsTracker {
       const analytic = await this.confirmAnalyticsForDay();
 
       if (analytic) {
-        await prisma.analytics.update({
+        await this.prisma.analytics.update({
           where: {
             id: analytic.id,
           },
@@ -48,7 +48,7 @@ class AnalyticsTracker {
       const analytic = await this.confirmAnalyticsForDay();
 
       if (analytic) {
-        await prisma.analytics.update({
+        await this.prisma.analytics.update({
           where: {
             id: analytic.id,
           },
@@ -68,7 +68,7 @@ class AnalyticsTracker {
       const analytic = await this.confirmAnalyticsForDay();
 
       if (analytic) {
-        await prisma.analytics.update({
+        await this.prisma.analytics.update({
           where: {
             id: analytic.id,
           },
@@ -92,7 +92,7 @@ class AnalyticsTracker {
       );
 
       if (tokenStats) {
-        await prisma.tokenStats.update({
+        await this.prisma.tokenStats.update({
           where: {
             address: tokenStats.address,
           },
@@ -112,7 +112,7 @@ class AnalyticsTracker {
       const analytic = await this.confirmAnalyticsForDay();
 
       if (analytic) {
-        const tokenStats = await prisma.tokenStats.findFirst({
+        const tokenStats = await this.prisma.tokenStats.findFirst({
           where: {
             address: tokenAddress,
             analyticsId: analytic.id,
@@ -122,7 +122,7 @@ class AnalyticsTracker {
         if (tokenStats) {
           return tokenStats;
         } else {
-          const newAssetStats = await prisma.tokenStats.create({
+          const newAssetStats = await this.prisma.tokenStats.create({
             data: {
               address: tokenAddress,
               name: name,
@@ -148,7 +148,7 @@ class AnalyticsTracker {
   async confirmAnalyticsForDay() {
     try {
       // get the latest analytic recorded
-      const analytic = await prisma.analytics.findFirst({
+      const analytic = await this.prisma.analytics.findFirst({
         orderBy: {
           date: 'desc',
         },
@@ -163,7 +163,7 @@ class AnalyticsTracker {
           // less than 24 hours
           return analytic;
         } else {
-          const newAnalytic = await prisma.analytics.create({
+          const newAnalytic = await this.prisma.analytics.create({
             data: {
               date: new Date(),
             },
@@ -172,7 +172,7 @@ class AnalyticsTracker {
           return newAnalytic;
         }
       } else {
-        const newAnalytic = await prisma.analytics.create({
+        const newAnalytic = await this.prisma.analytics.create({
           data: {
             date: new Date(),
           },
