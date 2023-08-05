@@ -7,6 +7,7 @@ import { GetAllOrdersResponse } from '../../../../types/responses/GetAllOrdersRe
 import { DeleteRequestBody } from '../../../../types/requests/DeleteRequestBody';
 import { UpdateOrderRequestBody } from '../../../../types/requests/UpdateOrderRequestBody';
 import { prisma } from '../../../../utilities/constants';
+import { AnalyticsTracker } from '../../../../utilities/AnalyticsTracker';
 
 export async function GET(request: NextRequest) {
   const userId = request.headers.get('genesis-bot-user-id');
@@ -55,6 +56,8 @@ export async function GET(request: NextRequest) {
       response.wallet3Orders.push(orderResponse);
     }
   });
+
+  await AnalyticsTracker.recordOrderStatusCheck();
 
   return NextResponse.json(response, {
     status: 200,
@@ -122,6 +125,8 @@ export async function POST(request: NextRequest) {
     frequency: order.frequency,
   };
 
+  await AnalyticsTracker.recordOrderCreation();
+
   return NextResponse.json(orderResponse, {
     status: 200,
     headers: {
@@ -164,6 +169,8 @@ export async function DELETE(request: NextRequest) {
       orderId: orderToDelete.orderID,
     },
   });
+
+  await AnalyticsTracker.recordOrderDeletion();
 
   return NextResponse.json(
     {
@@ -265,6 +272,8 @@ export async function PATCH(request: NextRequest) {
       },
     });
   }
+
+  await AnalyticsTracker.recordOrderUpdate();
 
   return NextResponse.json(
     {

@@ -5,6 +5,7 @@ import {
   OrderStatusHistoryResponse,
   OrderStatusTrack,
 } from '../../../../../types/responses/OrderStatusHistoryResponse';
+import { AnalyticsTracker } from '../../../../../utilities/AnalyticsTracker';
 
 export async function GET(request: NextRequest) {
   const userId = request.headers.get('genesis-bot-user-id');
@@ -59,6 +60,8 @@ export async function GET(request: NextRequest) {
       console.log('Wallet owner address not found');
     }
   });
+
+  await AnalyticsTracker.recordOrderStatusCheck();
 
   return NextResponse.json(response, {
     status: 200,

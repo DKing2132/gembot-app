@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OrderValidator } from '../../../../../utilities/validators/OrderValidator';
 import { BuyRequestBody } from '../../../../../types/requests/BuyRequestBody';
 import { BuyQueue } from '../../../../../utilities/constants';
+import { AnalyticsTracker } from '../../../../../utilities/AnalyticsTracker';
 
 export async function POST(request: NextRequest) {
   const userId = request.headers.get('genesis-bot-user-id');
@@ -38,6 +39,8 @@ export async function POST(request: NextRequest) {
       { attempts: 1 }
     );
     console.log('Job added to queue: ' + job.id);
+
+    await AnalyticsTracker.recordBuy();
 
     return NextResponse.json({ message: job.id }, { status: 200 });
   } catch (error) {

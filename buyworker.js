@@ -16,6 +16,7 @@ const {
 } = require('@uniswap/sdk');
 const { ethers } = require('ethers');
 const { UniswapV2PairABI, UniswapV2RouterABI, ERC20Abi } = require('./abis');
+const { AnalyticsTracker } = require('./workerHelpers/AnalyticsTracker');
 const crypto = require('crypto');
 
 const REDIS_URL = process.env.REDIS_URL;
@@ -462,12 +463,36 @@ function start() {
         }
       }
 
+      if (job.data.type === 'buy') {
+        await AnalyticsTracker.recordTokenTotalAmountIncrease(
+          job.data.depositedTokenAddress,
+          '',
+          '',
+          job.data.depositedTokenAmount
+        );
+        await AnalyticsTracker.recordBuyTxSucceded();
+      } else if (job.data.type === 'sell') {
+        await AnalyticsTracker.recordTokenTotalAmountIncrease(
+          job.data.depositedTokenAddress,
+          '',
+          '',
+          job.data.depositedTokenAmount
+        );
+        await AnalyticsTracker.recordSellTxSucceded();
+      }
+
       return Promise.resolve({
         success: true,
         transactionHash: tx.hash,
         message: 'Transaction executed successfully.',
       });
     } catch (err) {
+      if (job.data.type === 'buy') {
+        await AnalyticsTracker.recordBuyTxFailed();
+      } else if (job.data.type === 'sell') {
+        await AnalyticsTracker.recordSellTxFailed();
+      }
+
       if (err.code === 'INSUFFICIENT_FUNDS') {
         return Promise.reject({
           success: false,

@@ -259,10 +259,10 @@ function start() {
               await updateOrderStatusHistory(
                 job.data.orderId,
                 'Failed',
-                updatedOrder.depositedTokenAmount,
-                updatedOrder.lastUpdatedAt,
-                updatedOrder.nextUpdateAt,
-                updatedOrder.frequency,
+                job.data.depositedTokenAmount,
+                job.data.lastUpdatedAt,
+                job.data.nextUpdateAt,
+                job.data.frequency,
                 jobStatus.message
               );
               updatedStatusHistory = true;

@@ -76,3 +76,30 @@ model OrderStatusHistory {
   status String
   message String
 }
+
+model Analytics {
+  id String @id @default(uuid())
+  buyCount Int @default(0)
+  sellCount Int @default(0)
+  date DateTime @default(now())
+  orderStatusChecks Int @default(0)
+  activeOrdersChecks Int @default(0)
+  ordersCreated Int @default(0)
+  ordersUpdated Int @default(0)
+  ordersDeleted Int @default(0)
+  buyTxFailed Int @default(0)
+  buyTxSucceeded Int @default(0)
+  sellTxFailed Int @default(0)
+  sellTxSucceeded Int @default(0)
+  tokenStats TokenStats[]
+}
+
+model TokenStats {
+  analyticsId String
+  analytics Analytics @relation(fields: [analyticsId], references: [id])
+  address String @unique
+  name String
+  symbol String
+  totalAmount Decimal @default(0)
+  searchCount Int @default(0)
+}

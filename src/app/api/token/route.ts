@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TokenResponse } from '../../../../types/responses/TokenResponse';
 import { prisma } from '../../../../utilities/constants';
+import { AnalyticsTracker } from '../../../../utilities/AnalyticsTracker';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -29,6 +30,13 @@ export async function GET(request: NextRequest) {
       symbol: tokenInDB.symbol,
       message: 'Found token in database.',
     };
+
+    await AnalyticsTracker.recordTokenSearch(
+      tokenAddress,
+      tokenInDB.name,
+      tokenInDB.symbol
+    );
+
     return NextResponse.json(tokenResponse, { status: 200 });
   }
 
@@ -73,9 +81,17 @@ export async function GET(request: NextRequest) {
         },
       });
 
+      await AnalyticsTracker.recordTokenSearch(
+        tokenAddress,
+        tokenResponse.name,
+        tokenResponse.symbol
+      );
+
       return NextResponse.json(tokenResponse, { status: 200 });
     } else {
-      console.log(`Response from dexscreener was not ok for token ${tokenAddress}.`);
+      console.log(
+        `Response from dexscreener was not ok for token ${tokenAddress}.`
+      );
       const tokenResponse: TokenResponse = {
         name: '',
         symbol: '',
