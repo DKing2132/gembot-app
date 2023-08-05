@@ -35,6 +35,7 @@ const SLIPPAGE = process.env.SLIPPAGE;
 const UNISWAP_V2_ROUTER_ADDRESS = process.env.UNISWAP_V2_ROUTER_ADDRESS;
 const GAS_BUFFER = process.env.GAS_BUFFER;
 const FEE_COLLECTOR_ADDRESS = process.env.FEE_COLLECTOR_ADDRESS;
+const GAS_PRICE_MULTIPLIER = process.env.GAS_PRICE_MULTIPLIER;
 
 const algorithm = 'aes-256-cbc'; //Using AES encryption
 const key = Buffer.from(keyStr, 'hex'); //Creating Key
@@ -61,6 +62,19 @@ class SendTxHelper {
     // 110 is 10% buffer over the estimated gas limit
     return gasLimit.mul(Number(GAS_BUFFER)).div(100);
   }
+
+  static getGasPriceWithMultiplier(gasPrice) {
+    console.log('Gas Price in gwei before multiplier:');
+    console.log(ethers.utils.formatUnits(gasPrice, 'gwei'));
+    console.log('Gas Price in gwei after multiplier:');
+    console.log(
+      ethers.utils.formatUnits(
+        gasPrice.mul(Number(GAS_PRICE_MULTIPLIER)).div(100),
+        'gwei'
+      )
+    );
+    return gasPrice.mul(Number(GAS_PRICE_MULTIPLIER)).div(100);
+  }
 }
 
 class ERC20Helper {
@@ -74,12 +88,8 @@ class ERC20Helper {
     try {
       const ERC20Token = new ethers.Contract(tokenAddress, ERC20Abi, signer);
 
-      console.log('Gas Price: in gwei:');
-      console.log(
-        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
-      );
       const currentGasPrice = ethers.utils.hexlify(
-        await provider.getGasPrice()
+        SendTxHelper.getGasPriceWithMultiplier(await provider.getGasPrice())
       );
 
       const estimatedGas = await ERC20Token.estimateGas.approve(
@@ -105,12 +115,8 @@ class ERC20Helper {
     try {
       const ERC20Token = new ethers.Contract(tokenAddress, ERC20Abi, wallet);
 
-      console.log('Gas Price: in gwei:');
-      console.log(
-        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
-      );
       const currentGasPrice = ethers.utils.hexlify(
-        await provider.getGasPrice()
+        SendTxHelper.getGasPriceWithMultiplier(await provider.getGasPrice())
       );
 
       const estimatedGas = await ERC20Token.estimateGas.transfer(
@@ -154,12 +160,8 @@ class ERC20Helper {
   static async transferETH(wallet, recipientAddress, amountToSend) {
     try {
       const nonce = await wallet.getTransactionCount();
-      console.log('Gas Price: in gwei:');
-      console.log(
-        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
-      );
       const currentGasPrice = ethers.utils.hexlify(
-        await provider.getGasPrice()
+        SendTxHelper.getGasPriceWithMultiplier(await provider.getGasPrice())
       );
       const estimatedGas = await provider.estimateGas({
         from: wallet.address,
@@ -342,12 +344,8 @@ function start() {
       const value = trade.inputAmount.raw; // needs to be converted to e.g. hex
       const valueHex = ethers.BigNumber.from(value.toString()).toHexString();
 
-      console.log('Gas Price: in gwei:');
-      console.log(
-        ethers.utils.formatUnits(await provider.getGasPrice(), 'gwei')
-      );
       const currentGasPrice = ethers.utils.hexlify(
-        await provider.getGasPrice()
+        SendTxHelper.getGasPriceWithMultiplier(await provider.getGasPrice())
       );
 
       const UniswapV2Router = new ethers.Contract(
