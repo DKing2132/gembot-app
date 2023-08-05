@@ -70,3 +70,69 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+
+export async function DELETE(request: NextRequest) {
+  const userId = request.headers.get('genesis-bot-user-id');
+  if (!userId) {
+    console.log('User ID not found in request header');
+    return NextResponse.json(
+      { message: 'Failed to retrieve user id.' },
+      { status: 400 }
+    );
+  }
+
+  const validation = await UserValidator.validateUserExists(userId);
+  if (!validation.valid) {
+    return NextResponse.json({ message: validation.message }, { status: 400 });
+  }
+
+  // delete status for non existing orders
+  const orderHistories = await prisma.orderStatusHistory.findMany({
+    where: {
+      userId: userId,
+    },
+  });
+
+  if (orderHistories.length === 0) {
+    return NextResponse.json(
+      { message: 'No order history found for you.' },
+      { status: 200 }
+    );
+  }
+
+  const orderIds = orderHistories.map((orderHistory) => orderHistory.orderId);
+
+  const orders = await prisma.order.findMany({
+    where: {
+      orderId: {
+        in: orderIds,
+      },
+    },
+  });
+
+  const existingOrderIds = orders.map((order) => order.orderId);
+
+  const nonExistingOrderIds = orderIds.filter(
+    (orderId) => !existingOrderIds.includes(orderId)
+  );
+
+  if (nonExistingOrderIds.length === 0) {
+    return NextResponse.json(
+      { message: 'No non existing orders found.' },
+      { status: 200 }
+    );
+  }
+
+  await prisma.orderStatusHistory.deleteMany({
+    where: {
+      orderId: {
+        in: nonExistingOrderIds,
+      },
+    },
+  });
+
+  return NextResponse.json(
+    { message: 'Successfully deleted orders history for non existing orders.' },
+    { status: 200 }
+  );
+}
