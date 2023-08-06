@@ -61,6 +61,19 @@ export class ERC20Helper {
     }
   }
 
+  public static async getSupply(tokenAddress: string) {
+    try {
+      const ERC20Token = new ethers.Contract(tokenAddress, ERC20Abi, provider);
+
+      const supply = await ERC20Token.totalSupply();
+
+      return ethers.BigNumber.from(supply);
+    } catch (error) {
+      console.error(error);
+      return ethers.BigNumber.from(0);
+    }
+  }
+
   public static async transfer(
     tokenAddress: string,
     wallet: Wallet,

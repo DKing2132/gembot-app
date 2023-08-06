@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { ChainId } from '@uniswap/sdk';
 import Queue from 'bull';
+import { createClient } from 'redis';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -42,6 +43,11 @@ if (SLIPPAGE === undefined) {
   throw new Error('SLIPPAGE must be provided!');
 }
 
+export const COINGECKO_API_URL = process.env.COINGECKO_API_URL!;
+if (COINGECKO_API_URL === undefined) {
+  throw new Error('COINGECKO_API_URL must be provided!');
+}
+
 export const REDIS_URL = process.env.REDIS_URL!;
 if (REDIS_URL === undefined) {
   throw new Error('REDIS_URL must be provided!');
@@ -63,3 +69,8 @@ export const WorkQueue = new Queue('dca1', REDIS_URL, {
     },
   },
 });
+
+export const RedisClient = createClient({
+  url: REDIS_URL,
+});
+RedisClient.on('error', (err) => console.log('Redis Client Error', err));
