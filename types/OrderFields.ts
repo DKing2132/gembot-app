@@ -2,4 +2,5 @@ export type UpdateOrderFields =
   | 'desiredToken'
   | 'depositedTokenAmount'
   | 'unitOfTime'
-  | 'frequency';
+  | 'frequency'
+  | 'marketCapTarget';

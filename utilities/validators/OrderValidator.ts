@@ -97,6 +97,29 @@ export class OrderValidator {
       };
     }
 
+    if (order.isLimitOrder) {
+      if (!order.marketCapTarget) {
+        return {
+          valid: false,
+          message: 'Market cap target must be specified for limit orders',
+        };
+      }
+
+      if (order.marketCapTarget <= 0) {
+        return {
+          valid: false,
+          message: 'Market cap target must be greater than 0',
+        };
+      }
+    } else {
+      if (order.marketCapTarget) {
+        return {
+          valid: false,
+          message: 'Market cap target cannot be specified for non-limit orders',
+        };
+      }
+    }
+
     return {
       valid: true,
     };
@@ -243,6 +266,26 @@ export class OrderValidator {
           message: unitOfTimeValidation.message,
         };
       }
+    } else if (updateRequest.field === 'marketCapTarget') {
+      if (!updateRequest.isLimitOrder) {
+        return {
+          valid: false,
+          message: 'Cannot update market cap target for non-limit orders.',
+        };
+      }
+      if (typeof updateRequest.value !== 'number') {
+        return {
+          valid: false,
+          message: 'Value must be a number.',
+        };
+      }
+
+      if (updateRequest.value <= 0) {
+        return {
+          valid: false,
+          message: 'Value must be greater than 0.',
+        };
+      }
     } else {
       return {
         valid: false,
@@ -387,7 +430,7 @@ export class OrderValidator {
         sellOrder.walletOwnerAddress,
         sellOrder.isNativeETH &&
           sellOrder.depositedTokenAddress === WETH[CHAINID].address,
-          sellOrder.orderId
+        sellOrder.orderId
       );
       if (!amountValidation.valid) {
         return {

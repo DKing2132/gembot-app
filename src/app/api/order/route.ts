@@ -4,10 +4,11 @@ import { OrderValidator } from '../../../../utilities/validators/OrderValidator'
 import { OrderResponse } from '../../../../types/responses/OrderResponse';
 import { UserValidator } from '../../../../utilities/validators/UserValidator';
 import { GetAllOrdersResponse } from '../../../../types/responses/GetAllOrdersResponse';
-import { DeleteRequestBody } from '../../../../types/requests/DeleteRequestBody';
+import { DeleteOrderRequestBody } from '../../../../types/requests/DeleteRequestBody';
 import { UpdateOrderRequestBody } from '../../../../types/requests/UpdateOrderRequestBody';
 import { prisma } from '../../../../utilities/constants';
 import { AnalyticsTracker } from '../../../../utilities/AnalyticsTracker';
+import { Order } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   const userId = request.headers.get('genesis-bot-user-id');
@@ -24,11 +25,28 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  const orders = await prisma.order.findMany({
-    where: {
-      userId: userId,
-    },
-  });
+  const { searchParams } = new URL(request.url);
+  const limitOrderParam = searchParams.get('isLimitOrder');
+  const isLimitOrder =
+    limitOrderParam && limitOrderParam.toLowerCase() === 'true';
+
+  let orders: Order[];
+
+  if (isLimitOrder) {
+    orders = await prisma.order.findMany({
+      where: {
+        userId: userId,
+        isLimitOrder: true,
+      },
+    });
+  } else {
+    orders = await prisma.order.findMany({
+      where: {
+        userId: userId,
+        isLimitOrder: false,
+      },
+    });
+  }
 
   const response: GetAllOrdersResponse = {
     wallet1Orders: [],
@@ -47,6 +65,10 @@ export async function GET(request: NextRequest) {
       unitOfTime: order.unitOfTime,
       frequency: order.frequency,
     };
+
+    if (isLimitOrder) {
+      orderResponse.marketCapTarget = Number(order.marketCapTarget);
+    }
 
     if (order.walletOwnerAddress === validation.user!.wallet1) {
       response.wallet1Orders.push(orderResponse);
@@ -84,36 +106,73 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  // create the order
-  const order = await prisma.order.create({
-    data: {
-      walletOwnerAddress: body.walletOwnerAddress,
-      depositedTokenAddress: body.depositedTokenAddress,
-      depositedTokenAmount: body.depositedTokenAmount,
-      desiredTokenAddress: body.desiredTokenAddress,
-      isNativeETH: body.isNativeETH,
-      unitOfTime: body.unitOfTime,
-      frequency: body.frequency,
-      userId: userId,
-    },
-  });
+  let order: Order;
 
-  // create order status history
-  await prisma.orderStatusHistory.create({
-    data: {
-      userId: userId,
-      orderId: order.orderId,
-      walletOwnerAddress: order.walletOwnerAddress,
-      depositedTokenAddress: order.depositedTokenAddress,
-      desiredTokenAddress: order.desiredTokenAddress,
-      depositedTokenAmount: order.depositedTokenAmount,
-      isNativeETH: order.isNativeETH,
-      unitOfTime: order.unitOfTime,
-      frequency: order.frequency,
-      status: 'Created',
-      message: 'Order was created successfully',
-    },
-  });
+  if (body.isLimitOrder) {
+    order = await prisma.order.create({
+      data: {
+        walletOwnerAddress: body.walletOwnerAddress,
+        depositedTokenAddress: body.depositedTokenAddress,
+        depositedTokenAmount: body.depositedTokenAmount,
+        desiredTokenAddress: body.desiredTokenAddress,
+        isNativeETH: body.isNativeETH,
+        unitOfTime: body.unitOfTime,
+        frequency: body.frequency,
+        isLimitOrder: true,
+        marketCapTarget: body.marketCapTarget,
+        userId: userId,
+      },
+    });
+  } else {
+    order = await prisma.order.create({
+      data: {
+        walletOwnerAddress: body.walletOwnerAddress,
+        depositedTokenAddress: body.depositedTokenAddress,
+        depositedTokenAmount: body.depositedTokenAmount,
+        desiredTokenAddress: body.desiredTokenAddress,
+        isNativeETH: body.isNativeETH,
+        unitOfTime: body.unitOfTime,
+        frequency: body.frequency,
+        userId: userId,
+      },
+    });
+  }
+
+  if (order.isLimitOrder) {
+    await prisma.orderStatusHistory.create({
+      data: {
+        userId: userId,
+        orderId: order.orderId,
+        walletOwnerAddress: order.walletOwnerAddress,
+        depositedTokenAddress: order.depositedTokenAddress,
+        depositedTokenAmount: order.depositedTokenAmount,
+        desiredTokenAddress: order.desiredTokenAddress,
+        isNativeETH: order.isNativeETH,
+        unitOfTime: order.unitOfTime,
+        frequency: order.frequency,
+        marketCapTarget: order.marketCapTarget,
+        status: 'Created',
+        message: 'Order was created successfully',
+      },
+    });
+  } else {
+    // create order status history
+    await prisma.orderStatusHistory.create({
+      data: {
+        userId: userId,
+        orderId: order.orderId,
+        walletOwnerAddress: order.walletOwnerAddress,
+        depositedTokenAddress: order.depositedTokenAddress,
+        desiredTokenAddress: order.desiredTokenAddress,
+        depositedTokenAmount: order.depositedTokenAmount,
+        isNativeETH: order.isNativeETH,
+        unitOfTime: order.unitOfTime,
+        frequency: order.frequency,
+        status: 'Created',
+        message: 'Order was created successfully',
+      },
+    });
+  }
 
   const orderResponse: OrderResponse = {
     walletOwnerAddress: order.walletOwnerAddress,
@@ -125,7 +184,12 @@ export async function POST(request: NextRequest) {
     frequency: order.frequency,
   };
 
-  await AnalyticsTracker.recordOrderCreation();
+  if (order.isLimitOrder) {
+    orderResponse.marketCapTarget = Number(order.marketCapTarget);
+    await AnalyticsTracker.recordLimitOrderCreation();
+  } else {
+    await AnalyticsTracker.recordOrderCreation();
+  }
 
   return NextResponse.json(orderResponse, {
     status: 200,
@@ -145,7 +209,7 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  const orderToDelete: DeleteRequestBody = await request.json();
+  const orderToDelete: DeleteOrderRequestBody = await request.json();
   const validation = await OrderValidator.validateUserOwnsOrder(
     userId,
     orderToDelete.orderID
@@ -154,13 +218,17 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  await prisma.order.delete({
+  const deletedOrder = await prisma.order.delete({
     where: {
       orderId: orderToDelete.orderID,
     },
   });
 
-  await AnalyticsTracker.recordOrderDeletion();
+  if (deletedOrder.isLimitOrder) {
+    await AnalyticsTracker.recordLimitOrderDeletion();
+  } else {
+    await AnalyticsTracker.recordOrderDeletion();
+  }
 
   return NextResponse.json(
     {
@@ -261,9 +329,31 @@ export async function PATCH(request: NextRequest) {
         unitOfTime: updateOrderBody.value as string,
       },
     });
+  } else if (validation.fieldToUpdate === 'marketCapTarget') {
+    await prisma.order.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        marketCapTarget: updateOrderBody.value as number,
+      },
+    });
+
+    await prisma.orderStatusHistory.update({
+      where: {
+        orderId: updateOrderBody.orderID,
+      },
+      data: {
+        marketCapTarget: updateOrderBody.value as number,
+      },
+    });
   }
 
-  await AnalyticsTracker.recordOrderUpdate();
+  if (updateOrderBody.isLimitOrder) {
+    await AnalyticsTracker.recordLimitOrderUpdate();
+  } else {
+    await AnalyticsTracker.recordOrderUpdate();
+  }
 
   return NextResponse.json(
     {

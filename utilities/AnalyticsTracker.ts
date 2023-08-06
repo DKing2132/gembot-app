@@ -82,6 +82,26 @@ export class AnalyticsTracker {
     }
   }
 
+  public static async recordLimitOrderCreation() {
+    try {
+      const analytic = await this.confirmAnalyticsForDay();
+
+      if (analytic) {
+        await prisma.analytics.update({
+          where: {
+            id: analytic.id,
+          },
+          data: {
+            limitOrdersCreated: analytic.limitOrdersCreated + 1,
+          },
+        });
+      }
+    } catch (error) {
+      console.log('Failed to track limit order creation');
+      console.log(error);
+    }
+  }
+
   public static async recordOrderCreation() {
     try {
       const analytic = await this.confirmAnalyticsForDay();
@@ -102,6 +122,26 @@ export class AnalyticsTracker {
     }
   }
 
+  public static async recordLimitOrderDeletion() {
+    try {
+      const analytic = await this.confirmAnalyticsForDay();
+
+      if (analytic) {
+        await prisma.analytics.update({
+          where: {
+            id: analytic.id,
+          },
+          data: {
+            limitOrdersDeleted: analytic.limitOrdersDeleted + 1,
+          },
+        });
+      }
+    } catch (error) {
+      console.log('Failed to track limit order deletion');
+      console.log(error);
+    }
+  }
+
   public static async recordOrderDeletion() {
     try {
       const analytic = await this.confirmAnalyticsForDay();
@@ -118,6 +158,26 @@ export class AnalyticsTracker {
       }
     } catch (error) {
       console.log('Failed to track order deletion');
+      console.log(error);
+    }
+  }
+
+  public static async recordLimitOrderUpdate() {
+    try {
+      const analytic = await this.confirmAnalyticsForDay();
+
+      if (analytic) {
+        await prisma.analytics.update({
+          where: {
+            id: analytic.id,
+          },
+          data: {
+            limitOrdersUpdated: analytic.limitOrdersUpdated + 1,
+          },
+        });
+      }
+    } catch (error) {
+      console.log('Failed to track limit order update');
       console.log(error);
     }
   }

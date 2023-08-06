@@ -22,6 +22,8 @@ model Order {
   nextUpdateAt DateTime @default(now())
   unitOfTime String
   frequency Int
+  isLimitOrder Boolean @default(false)
+  marketCapTarget Decimal @default(0)
   retryCount Int @default(0)
   user User @relation(fields: [userId], references: [id])
   userId String
@@ -66,6 +68,7 @@ model OrderStatusHistory {
   nextUpdateAt DateTime @default(now())
   unitOfTime String
   frequency Int
+  marketCapTarget Decimal @default(0)
   status String
   message String
 }
@@ -78,8 +81,11 @@ model Analytics {
   orderStatusChecks Int @default(0)
   activeOrdersChecks Int @default(0)
   ordersCreated Int @default(0)
+  limitOrdersCreated Int @default(0)
   ordersUpdated Int @default(0)
+  limitOrdersUpdated Int @default(0)
   ordersDeleted Int @default(0)
+  limitOrdersDeleted Int @default(0)
   buyTxFailed Int @default(0)
   buyTxSucceeded Int @default(0)
   sellTxFailed Int @default(0)

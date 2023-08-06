@@ -1,3 +1,3 @@
-export type DeleteRequestBody = {
+export type DeleteOrderRequestBody = {
   orderID: string;
 };
