@@ -72,5 +72,8 @@ export const WorkQueue = new Queue('dca1', REDIS_URL, {
 
 export const RedisClient = createClient({
   url: REDIS_URL,
+  socket: {
+    tls: false
+  }
 });
 RedisClient.on('error', (err) => console.log('Redis Client Error', err));
