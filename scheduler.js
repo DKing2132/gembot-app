@@ -89,9 +89,14 @@ async function processLimitOrder(order) {
           },
           { attempts: 1 }
         );
-      }
 
-      console.log('Scheduler - Order queued: ', order.orderId);
+        console.log('Scheduler - Order queued: ', order.orderId);
+      } else {
+        console.log(
+          'Scheduler - Order not queued due to market cap not reached: ',
+          order.orderId
+        );
+      }
     } else {
       console.log('Scheduler - Order already in queue: ', order.orderId);
     }

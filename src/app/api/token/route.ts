@@ -189,8 +189,6 @@ export async function GET(request: NextRequest) {
           marketCap: coingeckoMarketCap,
         };
 
-        console.log('I am in here!');
-        console.log(tokenResponse);
         return NextResponse.json(tokenResponse, { status: 200 });
       }
 
