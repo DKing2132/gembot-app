@@ -181,7 +181,10 @@ export async function GET(request: NextRequest) {
       );
       console.log('got market cap from coingecko');
       console.log(coingeckoMarketCap);
+      console.log(coingeckoMarketCap !== '0');
+      console.log(typeof coingeckoMarketCap);
       if (coingeckoMarketCap !== '0') {
+        console.log('I am in here!');
         await RedisHelper.set(key, coingeckoMarketCap);
         const tokenResponse: TokenResponse = {
           name: '',
