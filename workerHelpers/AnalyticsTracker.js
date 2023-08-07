@@ -115,7 +115,6 @@ class AnalyticsTracker {
         const tokenStats = await this.prisma.tokenStats.findFirst({
           where: {
             address: tokenAddress,
-            analyticsId: analytic.id,
           },
         });
 

@@ -14,11 +14,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tokenStats = await prisma.tokenStats.findMany({
-    where: {
-      analyticsId: analytic!.id,
-    },
-  });
+  const tokenStats = await prisma.tokenStats.findMany();
 
   const response: AnalyticsResponse = {
     buyCount: analytic.buyCount,
