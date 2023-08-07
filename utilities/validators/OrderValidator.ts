@@ -200,7 +200,8 @@ export class OrderValidator {
         userOwnsOrderValidation.order!.walletOwnerAddress,
         userOwnsOrderValidation.order!.isNativeETH &&
           userOwnsOrderValidation.order!.depositedTokenAddress ===
-            WETH[CHAINID].address
+            WETH[CHAINID].address,
+        updateRequest.orderID
       );
       if (!amountValidation.valid) {
         return {
