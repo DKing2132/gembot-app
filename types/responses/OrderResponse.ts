@@ -7,5 +7,6 @@ export type OrderResponse = {
   isNativeETH: boolean;
   unitOfTime: string;
   frequency: number;
+  isLimitOrder?: boolean;
   marketCapTarget?: number;
 };

@@ -68,6 +68,7 @@ model OrderStatusHistory {
   nextUpdateAt DateTime @default(now())
   unitOfTime String
   frequency Int
+  isLimitOrder Boolean @default(false)
   marketCapTarget Decimal @default(0)
   status String
   message String

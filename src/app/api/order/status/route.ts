@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   };
 
   orderHistories.forEach((orderHistory) => {
-    const ordeStatusHistoryResponse: OrderStatusTrack = {
+    const orderStatusHistoryResponse: OrderStatusTrack = {
       orderId: orderHistory.orderId,
       status: orderHistory.status,
       depositedTokenAddress: orderHistory.depositedTokenAddress,
@@ -50,12 +50,18 @@ export async function GET(request: NextRequest) {
       isNativeETH: orderHistory.isNativeETH,
     };
 
+    if (orderHistory.isLimitOrder) {
+      orderStatusHistoryResponse.isLimitOrder = orderHistory.isLimitOrder;
+      orderStatusHistoryResponse.marketCapTarget =
+        orderHistory.marketCapTarget.toString();
+    }
+
     if (orderHistory.walletOwnerAddress === validation.user!.wallet1) {
-      response.wallet1Orders.push(ordeStatusHistoryResponse);
+      response.wallet1Orders.push(orderStatusHistoryResponse);
     } else if (orderHistory.walletOwnerAddress === validation.user!.wallet2) {
-      response.wallet2Orders.push(ordeStatusHistoryResponse);
+      response.wallet2Orders.push(orderStatusHistoryResponse);
     } else if (orderHistory.walletOwnerAddress === validation.user!.wallet3) {
-      response.wallet3Orders.push(ordeStatusHistoryResponse);
+      response.wallet3Orders.push(orderStatusHistoryResponse);
     } else {
       console.log('Wallet owner address not found');
     }

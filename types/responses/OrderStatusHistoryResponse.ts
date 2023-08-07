@@ -17,4 +17,6 @@ export type OrderStatusTrack = {
   walletOwnerAddress: string;
   message: string;
   isNativeETH: boolean;
+  isLimitOrder?: boolean;
+  marketCapTarget?: string;
 };

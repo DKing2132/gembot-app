@@ -183,8 +183,9 @@ export class OrderValidator {
         };
       }
 
-      const tokenValidation = await TokenValidator.validateToken(
-        userOwnsOrderValidation.order!.depositedTokenAddress
+      const tokenValidation = await TokenValidator.validateTokens(
+        userOwnsOrderValidation.order!.depositedTokenAddress,
+        userOwnsOrderValidation.order!.desiredTokenAddress
       );
       if (!tokenValidation.valid) {
         return {
@@ -195,7 +196,7 @@ export class OrderValidator {
 
       const amountValidation = await AmountValidator.validateAmountForUser(
         updateRequest.value,
-        tokenValidation.token!,
+        tokenValidation.depositedToken!,
         userOwnsOrderValidation.order!.walletOwnerAddress,
         userOwnsOrderValidation.order!.isNativeETH &&
           userOwnsOrderValidation.order!.depositedTokenAddress ===
@@ -215,7 +216,8 @@ export class OrderValidator {
         };
       }
 
-      const tokenValidation = await TokenValidator.validateToken(
+      const tokenValidation = await TokenValidator.validateTokens(
+        userOwnsOrderValidation.order!.depositedTokenAddress,
         updateRequest.value
       );
       if (!tokenValidation.valid) {

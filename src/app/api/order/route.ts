@@ -25,28 +25,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const limitOrderParam = searchParams.get('isLimitOrder');
-  const isLimitOrder =
-    limitOrderParam && limitOrderParam.toLowerCase() === 'true';
-
   let orders: Order[];
 
-  if (isLimitOrder) {
-    orders = await prisma.order.findMany({
-      where: {
-        userId: userId,
-        isLimitOrder: true,
-      },
-    });
-  } else {
-    orders = await prisma.order.findMany({
-      where: {
-        userId: userId,
-        isLimitOrder: false,
-      },
-    });
-  }
+  orders = await prisma.order.findMany({
+    where: {
+      userId: userId,
+    },
+  });
 
   const response: GetAllOrdersResponse = {
     wallet1Orders: [],
@@ -66,7 +51,8 @@ export async function GET(request: NextRequest) {
       frequency: order.frequency,
     };
 
-    if (isLimitOrder) {
+    if (order.isLimitOrder) {
+      orderResponse.isLimitOrder = true;
       orderResponse.marketCapTarget = Number(order.marketCapTarget);
     }
 
@@ -150,6 +136,7 @@ export async function POST(request: NextRequest) {
         isNativeETH: order.isNativeETH,
         unitOfTime: order.unitOfTime,
         frequency: order.frequency,
+        isLimitOrder: true,
         marketCapTarget: order.marketCapTarget,
         status: 'Created',
         message: 'Order was created successfully',
@@ -217,6 +204,12 @@ export async function DELETE(request: NextRequest) {
   if (!validation.valid) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
+
+  await prisma.orderStatusHistory.delete({
+    where: {
+      orderId: orderToDelete.orderID,
+    },
+  });
 
   const deletedOrder = await prisma.order.delete({
     where: {

@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { TokenValidatorResult } from '../../types/validators/TokenValidatorResult';
 import { SingleTokenValidatorResult } from '../../types/validators/SingleTokenValidatorResult';
 import { UniswapV2Helper } from '../UniswapHelper';
+import { Pair } from '@uniswap/sdk';
 
 export class TokenValidator {
   public static async validateTokens(
@@ -49,6 +50,17 @@ export class TokenValidator {
         valid: false,
         message:
           'Uniswap does not contain information about given desired token.',
+      };
+    }
+
+    const pairAddress = Pair.getAddress(depositedToken, desiredToken);
+    console.log(
+      `Pair address: ${pairAddress} for ${depositedToken.address} and ${desiredToken.address}`
+    );
+    if (pairAddress === ethers.constants.AddressZero) {
+      return {
+        valid: false,
+        message: 'Pair does not exist in Uniswap',
       };
     }
 
